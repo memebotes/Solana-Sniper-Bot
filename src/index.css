@@ -1,3 +1,70 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --solana-turquoise: #00FFD1;
+}
+
+body {
+  @apply bg-gray-950 text-white;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Custom scrollbar for terminal-like elements */
+.terminal-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.terminal-scrollbar::-webkit-scrollbar-track {
+  @apply bg-gray-900;
+}
+
+.terminal-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-gray-700 rounded-full;
+}
+
+.terminal-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-600;
+}
+
+/* Terminal-style output animation */
+.terminal-output div {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typing 0.5s steps(30, end);
+}
+
+@keyframes typing {
+  from { width: 0 }
+  to { width: 100% }
+}
+
+/* LED text shadow effect */
+.led-text-shadow {
+  text-shadow: 0 0 5px var(--solana-turquoise), 0 0 10px var(--solana-turquoise);
+}
+
+/* Laser overlay animation for sniper mode */
+.laser-overlay {
+  background: linear-gradient(90deg, 
+    rgba(255, 0, 0, 0) 0%, 
+    rgba(255, 0, 0, 0.05) 50%, 
+    rgba(255, 0, 0, 0) 100%);
+  animation: laser-scan 3s infinite;
+  mix-blend-mode: overlay;
+}
+
+@keyframes laser-scan {
+  0% { transform: translateX(-100%) }
+  100% { transform: translateX(100%) }
+}
+
+/* Cyberpunk grid background */
+.bg-grid {
+  background-image: 
+    linear-gradient(rgba(0, 255, 209, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 209, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}

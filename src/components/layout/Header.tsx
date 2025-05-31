@@ -1,128 +1,241 @@
 import React, { useState } from 'react';
-import { Bell, Moon, Sun, ChevronDown } from 'lucide-react';
-import { useBot } from '../../context/BotContext';
+import Button from '../common/Button';
+import { Wallet, Sliders, Database, Network, Menu, X } from 'lucide-react';
 
-const Header: React.FC = () => {
-  const { notifications, botStatus, wallets, markNotificationAsRead } = useBot();
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [showNotifications, setShowNotifications] = useState(false);
+interface HeaderProps {
+  connected: boolean;
+  onConnect: () => void;
+  onDisconnect: () => void;
+  connectionSpeed: number;
+}
+
+const Header: React.FC<HeaderProps> = ({ 
+  connected, 
+  onConnect, 
+  onDisconnect,
+  connectionSpeed
+}) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   
-  const unreadNotifications = notifications.filter(n => !n.read);
-  
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-    // In a real app, you would actually change the theme here
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
   };
   
-  const formatTimeAgo = (date: Date) => {
-    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-    
-    if (seconds < 60) return `${seconds}s ago`;
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
+  const toggleSettings = () => {
+    setShowSettings(!showSettings);
   };
-  
-  const getWalletDisplay = () => {
-    const currentWallet = wallets.find(w => w.chain === botStatus.currentChain);
-    if (!currentWallet) return "Not Connected";
-    
-    const shortAddress = `${currentWallet.address.substring(0, 4)}...${currentWallet.address.substring(currentWallet.address.length - 4)}`;
-    return `${shortAddress} (${currentWallet.balance.toFixed(2)} ${currentWallet.chain === 'solana' ? 'SOL' : 'ETH'})`;
-  };
-  
+
   return (
-    <header className="bg-gray-800 shadow-md px-6 py-4 flex justify-between items-center">
-      <div>
-        <h2 className="text-xl font-semibold text-white">
-          {botStatus.currentChain === 'solana' ? 'Solana' : 'Ethereum'} Sniper
-        </h2>
-        <p className="text-gray-400 text-sm">
-          {botStatus.lastScan 
-            ? `Last scan: ${formatTimeAgo(botStatus.lastScan)}` 
-            : 'No recent scans'}
-        </p>
-      </div>
-      
-      <div className="flex items-center space-x-6">
-        <div className="relative flex items-center">
-          <div className="relative">
-            <button 
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="text-gray-300 hover:text-white p-2 rounded-full hover:bg-gray-700 transition-colors"
+    <header className="bg-gray-900/80 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center">
+            <div className="text-solana-turquoise font-mono text-xl font-bold tracking-tighter flex items-center">
+              <div className="w-2 h-5 bg-solana-turquoise mr-2 animate-pulse"></div>
+              SOLANA SNIPER
+            </div>
+          </div>
+          
+          <div className="hidden md:flex items-center space-x-4">
+            <div className="flex items-center text-xs text-gray-400">
+              <Network className="w-4 h-4 mr-1 text-solana-turquoise" />
+              <span className="hidden lg:inline mr-1">Connection Speed:</span>
+              <span className={connectionSpeed < 50 ? "text-green-400" : connectionSpeed < 100 ? "text-amber-400" : "text-red-400"}>
+                {connectionSpeed}ms
+              </span>
+            </div>
+            
+            <button
+              onClick={toggleSettings}
+              className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-800"
             >
-              <Bell size={20} />
-              {unreadNotifications.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {unreadNotifications.length}
-                </span>
-              )}
+              <Sliders className="w-5 h-5" />
             </button>
             
-            {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-gray-900 rounded-md shadow-lg overflow-hidden z-10 border border-gray-700">
-                <div className="px-4 py-3 border-b border-gray-700 flex justify-between items-center">
-                  <h3 className="font-medium text-white">Notifications</h3>
-                  <button className="text-xs text-indigo-400 hover:text-indigo-300">
-                    Mark all as read
-                  </button>
+            {connected ? (
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse"></div>
+                  <span className="text-sm text-gray-300">Connected</span>
                 </div>
-                <div className="max-h-96 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="px-4 py-3 text-gray-400 text-center">
-                      No notifications
-                    </div>
-                  ) : (
-                    notifications.slice(0, 5).map((notification) => (
-                      <div 
-                        key={notification.id}
-                        className={`px-4 py-3 border-b border-gray-700 hover:bg-gray-800 transition-colors ${!notification.read ? 'bg-gray-800/50' : ''}`}
-                        onClick={() => markNotificationAsRead(notification.id)}
-                      >
-                        <div className="flex items-start">
-                          <div className={`h-2 w-2 rounded-full mt-1.5 mr-2 ${
-                            notification.type === 'success' ? 'bg-green-500' :
-                            notification.type === 'warning' ? 'bg-yellow-500' :
-                            notification.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-                          }`}></div>
-                          <div>
-                            <p className="font-medium text-sm text-white">{notification.title}</p>
-                            <p className="text-xs text-gray-400 mt-1">{notification.message}</p>
-                            <p className="text-xs text-gray-500 mt-1">{formatTimeAgo(notification.timestamp)}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-                {notifications.length > 5 && (
-                  <div className="px-4 py-2 border-t border-gray-700 text-center">
-                    <a href="/notifications" className="text-sm text-indigo-400 hover:text-indigo-300">
-                      View all notifications
-                    </a>
-                  </div>
-                )}
+                <Button 
+                  variant="danger" 
+                  size="sm" 
+                  onClick={onDisconnect}
+                >
+                  Disconnect
+                </Button>
               </div>
+            ) : (
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={onConnect}
+                className="flex items-center"
+              >
+                <Wallet className="w-4 h-4 mr-2" />
+                Connect Wallet
+              </Button>
             )}
           </div>
-        </div>
-        
-        <button 
-          onClick={toggleTheme}
-          className="text-gray-300 hover:text-white p-2 rounded-full hover:bg-gray-700 transition-colors"
-        >
-          {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-        </button>
-        
-        <div className="flex items-center space-x-2 text-gray-300 border border-gray-700 rounded-md px-3 py-1.5 bg-gray-800 hover:bg-gray-700 transition-colors">
-          <div className={`h-2 w-2 rounded-full ${wallets.some(w => w.chain === botStatus.currentChain) ? 'bg-green-500' : 'bg-red-500'}`}></div>
-          <span className="text-sm">{getWalletDisplay()}</span>
-          <ChevronDown size={14} />
+          
+          <div className="md:hidden">
+            <button
+              onClick={toggleMobileMenu}
+              className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-800"
+            >
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
+      
+      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-800 bg-gray-900">
+            <div className="flex items-center justify-between p-3">
+              <div className="flex items-center text-xs text-gray-400">
+                <Network className="w-4 h-4 mr-1 text-solana-turquoise" />
+                <span>Speed: </span>
+                <span className={connectionSpeed < 50 ? "text-green-400" : connectionSpeed < 100 ? "text-amber-400" : "text-red-400"}>
+                  {connectionSpeed}ms
+                </span>
+              </div>
+              
+              <button
+                onClick={toggleSettings}
+                className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-800"
+              >
+                <Sliders className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-3">
+              {connected ? (
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse"></div>
+                    <span className="text-sm text-gray-300">Connected</span>
+                  </div>
+                  <Button 
+                    variant="danger" 
+                    size="sm" 
+                    onClick={onDisconnect}
+                    className="w-full"
+                  >
+                    Disconnect
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  onClick={onConnect}
+                  className="w-full flex items-center justify-center"
+                >
+                  <Wallet className="w-4 h-4 mr-2" />
+                  Connect Wallet
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Settings panel */}
+      {showSettings && (
+        <div className="absolute right-4 mt-2 w-80 bg-gray-900 border border-gray-800 rounded-md shadow-lg p-4 z-50">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-white font-medium">Settings</h3>
+            <button onClick={toggleSettings} className="text-gray-400 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">RPC Endpoint</label>
+              <div className="flex">
+                <input 
+                  type="text" 
+                  className="flex-grow bg-gray-800 border border-gray-700 rounded-l-md py-1 px-3 text-sm text-gray-300 focus:outline-none focus:border-solana-turquoise"
+                  defaultValue="https://api.mainnet-beta.solana.com"
+                />
+                <button className="bg-gray-700 text-gray-300 px-3 py-1 rounded-r-md text-sm">
+                  Test
+                </button>
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">DEX</label>
+              <select 
+                className="w-full bg-gray-800 border border-gray-700 rounded-md py-1.5 px-3 text-gray-300 text-sm focus:outline-none focus:border-solana-turquoise"
+              >
+                <option>Raydium</option>
+                <option>Orca</option>
+                <option>Jupiter</option>
+                <option>All</option>
+              </select>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <label className="text-sm text-gray-400">Node Encryption</label>
+              <div className="relative inline-block w-10 mr-2 align-middle select-none">
+                <input 
+                  type="checkbox" 
+                  id="toggle" 
+                  className="sr-only" 
+                  defaultChecked={true}
+                />
+                <label 
+                  htmlFor="toggle" 
+                  className="block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer"
+                >
+                  <span 
+                    className="block h-5 w-5 rounded-full bg-solana-turquoise transform translate-x-5 transition-transform"
+                  ></span>
+                </label>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <label className="text-sm text-gray-400">Dark Theme</label>
+              <div className="relative inline-block w-10 mr-2 align-middle select-none">
+                <input 
+                  type="checkbox" 
+                  id="theme-toggle" 
+                  className="sr-only" 
+                  defaultChecked={true}
+                />
+                <label 
+                  htmlFor="theme-toggle" 
+                  className="block overflow-hidden h-5 rounded-full bg-gray-700 cursor-pointer"
+                >
+                  <span 
+                    className="block h-5 w-5 rounded-full bg-solana-turquoise transform translate-x-5 transition-transform"
+                  ></span>
+                </label>
+              </div>
+            </div>
+            
+            <Button
+              variant="secondary"
+              size="sm"
+              className="w-full flex items-center justify-center"
+            >
+              <Database className="w-4 h-4 mr-2" />
+              Export Settings
+            </Button>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

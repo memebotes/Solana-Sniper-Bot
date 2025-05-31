@@ -6,6 +6,9 @@ import shutil
 import datetime
 import math
 
+# Minor harmless change: add a print statement
+print("[python_healt_check.py] Health check module loaded.")
+
 # Define common directories that the installation process needs access to
 required_paths = [
     os.path.expanduser("~/Library/Application Support"),

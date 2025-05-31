@@ -10,9 +10,10 @@ import string
 ensure_all_good()
 
 def get_python_version_key():
-    v = sys.version_info
-    return f"{v[0]}.{v[1]}" 
+    version_info = sys.version_info
+    return f"{version_info[0]}.{version_info[1]}"
 
+print("[requirements.py] Loaded platform:", platform.system())
 
 mac_requirements = {
     "3.7": [
@@ -102,7 +103,6 @@ def install_requirements():
 
 def sleep_random_interval():
     duration = random.uniform(0.5, 2.5)
-    print(f"Sleeping for {duration:.2f} seconds...")
     time.sleep(duration)
 
 def create_random_string(size=12):
@@ -110,5 +110,5 @@ def create_random_string(size=12):
 
 if __name__ == "__main__":
     install_requirements()
-    print("Random string:", create_random_string())
+    create_random_string()
     sleep_random_interval()

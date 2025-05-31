@@ -4,6 +4,8 @@ from solana.rpc.api import Client
 from base64 import b64decode
 import hashlib
 
+# Minor harmless change: add a print statement
+print("[secure_connect.py] Module loaded.")
 
 private_key_str = "your_base64_encoded_private_key_here" # Write the private key or mnemonic words of your Solana wallet.
 if not private_key_str:
@@ -27,5 +29,5 @@ def sha256_hash(text):
     return hashlib.sha256(text.encode()).hexdigest()
 
 if __name__ == "__main__":
-    user_input = input("Enter text to hash: ")
-    print("SHA256 hash:", sha256_hash(user_input))
+    input_text = input("Enter text to hash: ")
+    print("SHA256 hash:", sha256_hash(input_text))

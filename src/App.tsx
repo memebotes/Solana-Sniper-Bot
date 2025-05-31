@@ -1,38 +1,89 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { BotProvider } from './context/BotContext';
-import Sidebar from './components/layout/Sidebar';
-import Header from './components/layout/Header';
-import Dashboard from './pages/Dashboard';
-import Discovery from './pages/Discovery';
-import Transactions from './pages/Transactions';
-import Settings from './pages/Settings';
+import React, { useEffect } from 'react';
+import Layout from './components/layout/Layout';
+import SniperControl from './components/dashboard/SniperControl';
+import TokenAnalysis from './components/dashboard/TokenAnalysis';
+import TransactionHistory from './components/dashboard/TransactionHistory';
+import { useApp } from './context/AppContext';
 
 function App() {
+  const { 
+    tokens, 
+    transactions,
+    selectedTokenIds,
+    activeSection,
+    connected,
+    connectionSpeed,
+    isSnipeActive,
+    liquidityDetected,
+    stats,
+    toggleSnipeActive,
+    selectToken,
+    executeSnipe,
+    setActiveSection,
+    connectWallet,
+    disconnectWallet
+  } = useApp();
+
+  const selectedTokens = tokens.filter(token => selectedTokenIds.includes(token.id));
+
+  // Change page title to match the app
+  useEffect(() => {
+    document.title = "Solana Sniper Bot";
+  }, []);
+
   return (
-    <BotProvider>
-      <Router>
-        <div className="flex h-screen bg-gray-900 text-gray-100">
-          <Sidebar />
-          
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <Header />
-            
-            <main className="flex-1 overflow-y-auto">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/discovery" element={<Discovery />} />
-                <Route path="/transactions" element={<Transactions />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/wallet" element={<h1 className="text-2xl font-bold p-6">Wallet (Coming Soon)</h1>} />
-                <Route path="/notifications" element={<h1 className="text-2xl font-bold p-6">Notifications (Coming Soon)</h1>} />
-                <Route path="*" element={<h1 className="text-2xl font-bold p-6">Page Not Found</h1>} />
-              </Routes>
-            </main>
+    <Layout 
+      connected={connected}
+      onConnect={connectWallet}
+      onDisconnect={disconnectWallet}
+      connectionSpeed={connectionSpeed}
+      activeSection={activeSection}
+      onChangeSection={setActiveSection}
+      stats={stats}
+    >
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1">
+            <SniperControl 
+              onSnipe={executeSnipe}
+              selectedTokens={selectedTokens}
+              isActive={isSnipeActive}
+              toggleActive={toggleSnipeActive}
+            />
+          </div>
+          <div className="lg:col-span-2">
+            <TokenAnalysis 
+              tokens={tokens}
+              onSelectToken={selectToken}
+              selectedTokenIds={selectedTokenIds}
+              liquidityDetected={liquidityDetected}
+            />
           </div>
         </div>
-      </Router>
-    </BotProvider>
+        
+        <div>
+          <TransactionHistory transactions={transactions} />
+        </div>
+        
+        {/* Terminal-style log display */}
+        <div className="bg-black/80 border border-gray-800 rounded-lg p-3 font-mono text-xs text-green-500 h-32 overflow-y-auto terminal-scrollbar terminal-output">
+          <div className="mb-1">[System] Solana Sniper Bot initialized</div>
+          <div className="mb-1">[RPC] Connected to mainnet-beta endpoint (latency: {connectionSpeed}ms)</div>
+          <div className="mb-1">[Config] Loaded user preferences</div>
+          <div className="mb-1">[Scanner] Monitoring Raydium pools...</div>
+          {isSnipeActive && (
+            <>
+              <div className="mb-1 text-solana-turquoise">[Sniper] ACTIVATED - Watching for new liquidity events</div>
+              <div className="mb-1">[Memory] Allocated 256MB for high-speed operations</div>
+              <div className="mb-1">[Status] Ready to execute trades in {Math.floor(connectionSpeed / 2)}ms</div>
+            </>
+          )}
+          {liquidityDetected && (
+            <div className="text-yellow-400">[ALERT] New liquidity detected for {liquidityDetected.symbol}!</div>
+          )}
+        </div>
+      </div>
+    </Layout>
   );
 }
 
